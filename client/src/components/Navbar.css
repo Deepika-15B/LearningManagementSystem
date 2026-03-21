@@ -1,11 +1,11 @@
 .navbar {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(248, 251, 255, 0.95);
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(31, 42, 68, 0.1);
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid #dbe3ef;
   transition: all 0.3s ease;
 }
 
@@ -25,7 +25,7 @@
   gap: 8px;
   font-size: 24px;
   font-weight: 700;
-  color: #000000;
+  color: #1e3a8a;
   letter-spacing: -0.5px;
 }
 
@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #374151;
+  color: #334155;
   font-weight: 500;
   padding: 8px 16px;
   border-radius: 6px;
@@ -51,7 +51,7 @@
 }
 
 .nav-link:hover {
-  background-color: #000000;
+  background-color: #1e3a8a;
   color: white;
 }
 

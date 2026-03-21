@@ -1,11 +1,23 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
 const generateVerificationToken = require('../utils/generateVerificationToken');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// @route   GET /api/auth/google-config
+// @desc    Provide Google OAuth client config to frontend
+// @access  Public
+router.get('/google-config', (req, res) => {
+  return res.json({
+    success: true,
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+  });
+});
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -168,6 +180,106 @@ router.post(
     }
   }
 );
+
+// @route   POST /api/auth/google
+// @desc    Login/Register user via Google OAuth token
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    const { credential, role } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google credential token is required',
+      });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        success: false,
+        message: 'Google OAuth is not configured on server',
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    const name = payload?.name || 'Google User';
+    const picture = payload?.picture || '';
+    const emailVerified = !!payload?.email_verified;
+    const googleSub = payload?.sub;
+
+    if (!email || !googleSub) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Google token payload',
+      });
+    }
+
+    let user = await User.findOne({ email }).select('+password');
+    const selectedRole = role === 'instructor' ? 'instructor' : 'student';
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: `google_${googleSub}_${Date.now()}`,
+        role: selectedRole,
+        profilePhoto: picture,
+        isEmailVerified: emailVerified,
+        isApproved: selectedRole === 'student',
+      });
+    } else {
+      if (user.isBlocked) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been blocked. Please contact admin.',
+        });
+      }
+
+      if (!user.profilePhoto && picture) {
+        user.profilePhoto = picture;
+      }
+      if (!user.isEmailVerified && emailVerified) {
+        user.isEmailVerified = true;
+      }
+      await user.save();
+    }
+
+    if (user.role === 'instructor' && !user.isApproved) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your instructor account is pending approval from admin.',
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePhoto: user.profilePhoto,
+        isEmailVerified: user.isEmailVerified,
+      },
+    });
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Google authentication failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+});
 
 // @route   GET /api/auth/me
 // @desc    Get current user

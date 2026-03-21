@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+  background: linear-gradient(160deg, #f8fbff 0%, #eef3fb 100%);
 }
 
 /* Smooth scroll */
@@ -58,7 +58,7 @@ html {
 
 /* Primary Button */
 .btn-primary {
-  background-color: #000000;
+  background-color: var(--primary);
   color: white;
   padding: 12px 24px;
   border: none;
@@ -71,7 +71,7 @@ html {
 }
 
 .btn-primary:hover {
-  background-color: #1F2937;
+  background-color: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
@@ -89,9 +89,9 @@ html {
 /* Secondary Button */
 .btn-secondary {
   background-color: white;
-  color: #000000;
+  color: var(--primary);
   padding: 12px 24px;
-  border: 2px solid #000000;
+  border: 2px solid var(--primary);
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
@@ -101,14 +101,14 @@ html {
 }
 
 .btn-secondary:hover {
-  background-color: #000000;
+  background-color: var(--primary);
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Danger Button */
 .btn-danger {
-  background-color: #1F2937;
+  background-color: #b91c1c;
   color: white;
   padding: 12px 24px;
   border: none;
@@ -121,12 +121,12 @@ html {
 }
 
 .btn-danger:hover {
-  background-color: #000000;
+  background-color: #991b1b;
 }
 
 /* Success Button */
 .btn-success {
-  background-color: #374151;
+  background-color: #047857;
   color: white;
   padding: 12px 24px;
   border: none;
@@ -139,7 +139,7 @@ html {
 }
 
 .btn-success:hover {
-  background-color: #1F2937;
+  background-color: #065f46;
 }
 
 /* Card */
@@ -149,14 +149,14 @@ html {
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border-light);
   backdrop-filter: blur(10px);
 }
 
 .card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-4px);
-  border-color: rgba(0, 0, 0, 0.1);
+  border-color: #bfccdf;
 }
 
 /* Glass morphism card */
@@ -169,22 +169,22 @@ html {
 
 /* Gradient card */
 .gradient-card {
-  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  background: linear-gradient(135deg, #1f2a44 0%, #0f172a 100%);
   color: white;
 }
 
 .gradient-card-blue {
-  background: linear-gradient(135deg, #000000 0%, #1F2937 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
   color: white;
 }
 
 .gradient-card-green {
-  background: linear-gradient(135deg, #374151 0%, #1F2937 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   color: white;
 }
 
 .gradient-card-orange {
-  background: linear-gradient(135deg, #4B5563 0%, #374151 100%);
+  background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
   color: white;
 }
 
@@ -197,13 +197,13 @@ html {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-main);
 }
 
 .form-input {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-light);
   border-radius: 8px;
   font-size: 16px;
   transition: all 0.3s ease;
@@ -211,14 +211,14 @@ html {
 
 .form-input:focus {
   outline: none;
-  border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 
 .form-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-light);
   border-radius: 8px;
   font-size: 16px;
   min-height: 120px;
@@ -229,14 +229,14 @@ html {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 
 .form-select {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-light);
   border-radius: 8px;
   font-size: 16px;
   background-color: white;
@@ -245,8 +245,8 @@ html {
 
 .form-select:focus {
   outline: none;
-  border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 
 /* Container */
@@ -258,8 +258,8 @@ html {
 
 /* Loading Spinner */
 .spinner {
-  border: 4px solid #F3F4F6;
-  border-top: 4px solid #000000;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid var(--primary);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -346,9 +346,9 @@ html {
 }
 
 .badge-info {
-  background-color: #F3F4F6;
-  color: #1F2937;
-  border: 1px solid #E5E7EB;
+  background-color: #eff6ff;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
 }
 
 /* Grid */

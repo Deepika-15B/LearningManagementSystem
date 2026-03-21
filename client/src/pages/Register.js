@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import './Auth.css';
 
 const Register = () => {
@@ -14,8 +15,13 @@ const Register = () => {
     phone: '',
     role: 'student',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState('');
   const { isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -24,6 +30,80 @@ const Register = () => {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchGoogleConfig = async () => {
+      try {
+        const res = await axios.get('/api/auth/google-config');
+        if (res.data.success && res.data.clientId) {
+          setGoogleClientId(res.data.clientId);
+        }
+      } catch (error) {
+        setGoogleClientId('');
+      }
+    };
+    fetchGoogleConfig();
+  }, []);
+
+  useEffect(() => {
+    if (!googleClientId) return undefined;
+
+    let attempts = 0;
+    const initTimer = setInterval(() => {
+      attempts += 1;
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response) => {
+            try {
+              setGoogleLoading(true);
+              const res = await axios.post('/api/auth/google', {
+                credential: response.credential,
+                role: formData.role,
+              });
+
+              if (res.data.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Google Registration Successful!',
+                  text: 'Your account has been created. Please login to continue.',
+                  confirmButtonText: 'Go to Login',
+                }).then(() => navigate('/login'));
+              }
+            } catch (error) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Google Signup Failed',
+                text: error.response?.data?.message || 'Unable to register with Google',
+              });
+            } finally {
+              setGoogleLoading(false);
+            }
+          },
+        });
+        setGoogleReady(true);
+        clearInterval(initTimer);
+      }
+
+      if (attempts > 25) {
+        clearInterval(initTimer);
+      }
+    }, 200);
+
+    return () => clearInterval(initTimer);
+  }, [formData.role, googleClientId, navigate]);
+
+  const handleContinueWithGoogle = () => {
+    if (!googleReady || !window.google || !window.google.accounts || !window.google.accounts.id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Google Auth Not Ready',
+        text: 'Google sign-up is not configured yet. Please check client ID settings.',
+      });
+      return;
+    }
+    window.google.accounts.id.prompt();
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -182,27 +262,37 @@ const Register = () => {
 
           <div className="form-group">
             <label className="form-label">Password *</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`form-input ${errors.password ? 'input-error' : ''}`}
-              placeholder="Enter your password (min. 6 characters)"
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`form-input ${errors.password ? 'input-error' : ''}`}
+                placeholder="Enter your password (min. 6 characters)"
+              />
+              <span className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+              </span>
+            </div>
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
 
           <div className="form-group">
             <label className="form-label">Confirm Password *</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
-              placeholder="Confirm your password"
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
+                placeholder="Confirm your password"
+              />
+              <span className="password-toggle-icon" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+              </span>
+            </div>
             {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
           </div>
 
@@ -210,6 +300,17 @@ const Register = () => {
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
+
+        <div className="auth-divider"><span>OR</span></div>
+        <button
+          type="button"
+          className="btn-secondary btn-full google-continue-btn"
+          onClick={handleContinueWithGoogle}
+          disabled={!googleReady || googleLoading}
+        >
+          Continue with Google
+        </button>
+        {googleLoading && <p className="google-loading-text">Signing up with Google...</p>}
 
         <p className="auth-footer">
           Already have an account? <Link to="/login">Login here</Link>

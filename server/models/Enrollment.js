@@ -25,6 +25,15 @@ const enrollmentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  notes: {
+    type: String,
+    default: '',
+    maxlength: 10000,
+  },
+  notesUpdatedAt: {
+    type: Date,
+    default: null,
+  },
 }, {
   timestamps: true,
 });

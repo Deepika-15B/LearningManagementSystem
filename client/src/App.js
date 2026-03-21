@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import MyCourses from './pages/MyCourses';
+import Prerequisites from './pages/Prerequisites';
 import InstructorDashboard from './pages/InstructorDashboard';
 import CreateCourse from './pages/CreateCourse';
 import EditCourse from './pages/EditCourse';
@@ -55,6 +56,15 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={['student']}>
                   <MyCourses />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/student/prerequisites"
+              element={
+                <PrivateRoute allowedRoles={['student']}>
+                  <Prerequisites />
                 </PrivateRoute>
               }
             />

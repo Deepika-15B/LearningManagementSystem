@@ -181,6 +181,14 @@ const Dashboard = () => {
               </Link>
             )}
 
+            {user?.role === 'student' && (
+              <Link to="/student/prerequisites" className="action-card">
+                <FiTrendingUp className="action-icon" />
+                <h3>Prerequisites</h3>
+                <p>Download recommended software tools</p>
+              </Link>
+            )}
+
             {(user?.role === 'instructor' || user?.role === 'admin') && (
               <Link to="/instructor/dashboard" className="action-card">
                 <FiAward className="action-icon" />

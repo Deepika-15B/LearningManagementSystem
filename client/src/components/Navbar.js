@@ -32,9 +32,14 @@ const Navbar = () => {
           {isAuthenticated ? (
             <>
               {user.role === 'student' && (
-                <Link to="/my-courses" className="nav-link">
-                  My Courses
-                </Link>
+                <>
+                  <Link to="/my-courses" className="nav-link">
+                    My Courses
+                  </Link>
+                  <Link to="/student/prerequisites" className="nav-link">
+                    Prerequisites
+                  </Link>
+                </>
               )}
               
               {(user.role === 'instructor' || user.role === 'admin') && (

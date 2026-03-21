@@ -121,5 +121,78 @@ router.get('/:courseId/check', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/enrollments/:courseId/notes
+// @desc    Get student notes for an enrolled course
+// @access  Private (Student)
+router.get('/:courseId/notes', protect, authorize('student'), async (req, res) => {
+  try {
+    const enrollment = await Enrollment.findOne({
+      student: req.user._id,
+      course: req.params.courseId,
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Enrollment not found for this course',
+      });
+    }
+
+    return res.json({
+      success: true,
+      notes: enrollment.notes || '',
+      notesUpdatedAt: enrollment.notesUpdatedAt,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+const saveCourseNotes = async (req, res) => {
+  try {
+    const { notes } = req.body;
+    const enrollment = await Enrollment.findOne({
+      student: req.user._id,
+      course: req.params.courseId,
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Enrollment not found for this course',
+      });
+    }
+
+    enrollment.notes = typeof notes === 'string' ? notes : '';
+    enrollment.notesUpdatedAt = new Date();
+    await enrollment.save();
+
+    return res.json({
+      success: true,
+      message: 'Notes saved successfully',
+      notes: enrollment.notes,
+      notesUpdatedAt: enrollment.notesUpdatedAt,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @route   PUT /api/enrollments/:courseId/notes
+// @desc    Save student notes for an enrolled course
+// @access  Private (Student)
+router.put('/:courseId/notes', protect, authorize('student'), saveCourseNotes);
+
+// @route   POST /api/enrollments/:courseId/notes
+// @desc    Save student notes for an enrolled course (alias)
+// @access  Private (Student)
+router.post('/:courseId/notes', protect, authorize('student'), saveCourseNotes);
+
 module.exports = router;
 

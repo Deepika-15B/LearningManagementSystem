@@ -35,6 +35,42 @@
   margin-bottom: 24px;
 }
 
+.auth-divider {
+  position: relative;
+  text-align: center;
+  margin: 8px 0 16px;
+}
+
+.auth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #dbe3ef;
+}
+
+.auth-divider span {
+  position: relative;
+  padding: 0 10px;
+  background: #fff;
+  color: #64748b;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.google-loading-text {
+  text-align: center;
+  color: #475569;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.google-continue-btn {
+  margin-bottom: 10px;
+}
+
 .btn-full {
   width: 100%;
   margin-top: 8px;
@@ -81,3 +117,22 @@
   }
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 16px;
+  cursor: pointer;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-icon:hover {
+  color: #1F2937;
+}

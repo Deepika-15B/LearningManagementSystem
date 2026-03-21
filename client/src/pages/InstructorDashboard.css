@@ -1,7 +1,7 @@
 .instructor-dashboard {
   flex: 1;
   padding: 40px 0;
-  background-color: #F3F4F6;
+  background-color: var(--bg-main);
 }
 
 .dashboard-header {
@@ -16,13 +16,13 @@
 .dashboard-header h1 {
   font-size: 36px;
   font-weight: 700;
-  color: #1F2937;
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .dashboard-header p {
   font-size: 18px;
-  color: #6B7280;
+  color: var(--text-muted);
 }
 
 .dashboard-header .btn-primary {
@@ -45,25 +45,25 @@
 }
 
 .courses-table thead {
-  background-color: #F9FAFB;
+  background-color: #f8fafc;
 }
 
 .courses-table th {
   padding: 16px;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #334155;
   border-bottom: 2px solid #E5E7EB;
 }
 
 .courses-table td {
   padding: 16px;
   border-bottom: 1px solid #F3F4F6;
-  color: #6B7280;
+  color: var(--text-muted);
 }
 
 .courses-table tbody tr:hover {
-  background-color: #F9FAFB;
+  background-color: #eff6ff;
 }
 
 .course-cell {
@@ -81,7 +81,7 @@
 
 .course-title {
   font-weight: 600;
-  color: #1F2937;
+  color: var(--text-main);
   margin-bottom: 4px;
 }
 
@@ -110,8 +110,8 @@
 }
 
 .btn-icon:hover {
-  background-color: #000000;
-  border-color: #000000;
+  background-color: var(--primary);
+  border-color: var(--primary);
   color: white;
 }
 

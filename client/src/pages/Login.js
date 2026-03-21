@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import './Auth.css';
 
 const Login = () => {
@@ -10,8 +11,12 @@ const Login = () => {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState('');
   const { login, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -20,6 +25,80 @@ const Login = () => {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchGoogleConfig = async () => {
+      try {
+        const res = await axios.get('/api/auth/google-config');
+        if (res.data.success && res.data.clientId) {
+          setGoogleClientId(res.data.clientId);
+        }
+      } catch (error) {
+        setGoogleClientId('');
+      }
+    };
+    fetchGoogleConfig();
+  }, []);
+
+  useEffect(() => {
+    if (!googleClientId) return undefined;
+
+    let attempts = 0;
+    const initTimer = setInterval(() => {
+      attempts += 1;
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response) => {
+            try {
+              setGoogleLoading(true);
+              const res = await axios.post('/api/auth/google', {
+                credential: response.credential,
+              });
+              if (res.data.success) {
+                login(res.data.user, res.data.token);
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Login Successful!',
+                  text: `Welcome, ${res.data.user.name}!`,
+                  timer: 2000,
+                  showConfirmButton: false,
+                }).then(() => navigate('/dashboard'));
+              }
+            } catch (error) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Google Login Failed',
+                text: error.response?.data?.message || 'Unable to login with Google',
+              });
+            } finally {
+              setGoogleLoading(false);
+            }
+          },
+        });
+        setGoogleReady(true);
+        clearInterval(initTimer);
+      }
+
+      if (attempts > 25) {
+        clearInterval(initTimer);
+      }
+    }, 200);
+
+    return () => clearInterval(initTimer);
+  }, [googleClientId, login, navigate]);
+
+  const handleContinueWithGoogle = () => {
+    if (!googleReady || !window.google || !window.google.accounts || !window.google.accounts.id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Google Auth Not Ready',
+        text: 'Google sign-in is not configured yet. Please check client ID settings.',
+      });
+      return;
+    }
+    window.google.accounts.id.prompt();
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -118,14 +197,19 @@ const Login = () => {
 
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`form-input ${errors.password ? 'input-error' : ''}`}
-              placeholder="Enter your password"
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`form-input ${errors.password ? 'input-error' : ''}`}
+                placeholder="Enter your password"
+              />
+              <span className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+              </span>
+            </div>
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
 
@@ -133,6 +217,17 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="auth-divider"><span>OR</span></div>
+        <button
+          type="button"
+          className="btn-secondary btn-full google-continue-btn"
+          onClick={handleContinueWithGoogle}
+          disabled={!googleReady || googleLoading}
+        >
+          Continue with Google
+        </button>
+        {googleLoading && <p className="google-loading-text">Signing in with Google...</p>}
 
         <p className="auth-footer">
           Don't have an account? <Link to="/register">Sign up here</Link>
