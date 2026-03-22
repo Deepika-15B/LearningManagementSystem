@@ -3,12 +3,12 @@ const User = require('../models/User');
 const createDefaultAdmin = async () => {
   try {
     // Check if admin already exists
-    const adminExists = await User.findOne({ email: 'admin@lms.com' });
+    const adminExists = await User.findOne({ email: 'admin@skillup.com' });
     
     if (!adminExists) {
       const admin = await User.create({
         name: 'Admin User',
-        email: 'admin@lms.com',
+        email: 'admin@skillup.com',
         password: 'admin123', // Default password
         role: 'admin',
         isApproved: true,
@@ -18,7 +18,7 @@ const createDefaultAdmin = async () => {
       });
       
       console.log('✅ Default admin created successfully!');
-      console.log('📧 Email: admin@lms.com');
+      console.log('📧 Email: admin@skillup.com');
       console.log('🔑 Password: admin123');
       console.log('⚠️  Please change the password after first login!');
     } else {

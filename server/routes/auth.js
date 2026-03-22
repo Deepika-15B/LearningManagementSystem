@@ -71,9 +71,9 @@ router.post(
       try {
         await sendEmail({
           email: user.email,
-          subject: 'Email Verification - Learning Management System',
+          subject: 'Email Verification - SKILLUP',
           html: `
-            <h2>Welcome to Learning Management System!</h2>
+            <h2>Welcome to SKILLUP!</h2>
             <p>Please verify your email by clicking the link below:</p>
             <a href="${verificationUrl}" style="background-color: #2563EB; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
             <p>This link will expire in 24 hours.</p>

@@ -11,7 +11,7 @@ const Home = () => {
           <div className="hero-content">
             <h1 className="hero-title">Learn, Teach, Grow</h1>
             <p className="hero-subtitle">
-              Your comprehensive Learning Management System for quality education
+              Your comprehensive SKILLUP platform for quality education
             </p>
             <div className="hero-buttons">
               <Link to="/courses" className="btn-primary">

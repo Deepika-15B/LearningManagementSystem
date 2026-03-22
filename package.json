@@ -1,7 +1,7 @@
 {
-  "name": "learning-management-system",
+  "name": "skillup",
   "version": "1.0.0",
-  "description": "A comprehensive Learning Management System with Student, Instructor, and Admin roles",
+  "description": "SKILLUP - A comprehensive Learning Management System with Student, Instructor, and Admin roles",
   "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -11,7 +11,7 @@
     "install-client": "cd client && npm install",
     "install-all": "npm run install-server && npm run install-client"
   },
-  "keywords": ["lms", "mern", "education"],
+  "keywords": ["skillup", "mern", "education"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
