@@ -1,6 +1,6 @@
-# Learning Management System (LMS)
+# SKILLUP
 
-A comprehensive Learning Management System built with MERN stack (MongoDB, Express, React, Node.js) featuring role-based access control for Students, Instructors, and Admins with an attractive, modern UI.
+SKILLUP is a comprehensive Learning Management System built with the MERN stack (MongoDB, Express, React, Node.js), featuring role-based access control for Students, Instructors, and Admins with an attractive, modern UI.
 
 ## ✨ Features
 
@@ -23,7 +23,7 @@ A comprehensive Learning Management System built with MERN stack (MongoDB, Expre
 - ✅ Manage Courses (Approve/Reject/Feature)
 - ✅ View all users and courses
 - ✅ Comprehensive admin dashboard with statistics
-- ✅ **Default Admin Account**: `admin@lms.com` / `admin123`
+- ✅ **Default Admin Account**: `admin@skillup.com` / `admin123`
 
 ## 🎨 UI Features
 
@@ -55,7 +55,7 @@ A comprehensive Learning Management System built with MERN stack (MongoDB, Expre
 
 1. **Clone the repository**
    ```bash
-   cd "D:\Full Stack Project\Learning Management System"
+   cd SKILLUP
    ```
 
 2. **Install dependencies**
@@ -117,7 +117,7 @@ A comprehensive Learning Management System built with MERN stack (MongoDB, Expre
 
 When you first start the server, a default admin account is automatically created:
 
-- **Email**: `admin@lms.com`
+- **Email**: `admin@skillup.com`
 - **Password**: `admin123`
 
 ⚠️ **Important**: Please change the password after first login for security!

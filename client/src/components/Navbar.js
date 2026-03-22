@@ -18,7 +18,7 @@ const Navbar = () => {
       <div className="nav-container">
         <Link to="/" className="nav-logo">
           <FiBook className="logo-icon" />
-          <span>LMS</span>
+          <span>SKILLUP</span>
         </Link>
 
         <div className="nav-menu">
