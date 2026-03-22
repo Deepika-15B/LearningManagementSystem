@@ -66,10 +66,21 @@ const Login = () => {
                 }).then(() => navigate('/dashboard'));
               }
             } catch (error) {
+              const code = error.response?.data?.code;
+              const message =
+                error.response?.data?.message || 'Unable to login with Google';
+              if (code === 'PENDING_INSTRUCTOR_APPROVAL') {
+                Swal.fire({
+                  icon: 'info',
+                  title: 'Approval pending',
+                  text: message,
+                });
+                return;
+              }
               Swal.fire({
                 icon: 'error',
                 title: 'Google Login Failed',
-                text: error.response?.data?.message || 'Unable to login with Google',
+                text: message,
               });
             } finally {
               setGoogleLoading(false);
@@ -164,7 +175,27 @@ const Login = () => {
         });
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      const code = error.response?.data?.code;
+      const message =
+        error.response?.data?.message || 'Login failed. Please try again.';
+      if (code === 'PENDING_INSTRUCTOR_APPROVAL') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Admin approval required',
+          text: message,
+          confirmButtonText: 'OK',
+        });
+        return;
+      }
+      if (code === 'USE_GOOGLE_LOGIN') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Use Google sign-in',
+          text: message,
+          confirmButtonText: 'OK',
+        });
+        return;
+      }
       Swal.fire({
         icon: 'error',
         title: 'Login Failed',

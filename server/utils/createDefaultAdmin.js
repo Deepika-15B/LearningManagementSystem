@@ -14,6 +14,7 @@ const createDefaultAdmin = async () => {
         isApproved: true,
         isEmailVerified: true,
         isBlocked: false,
+        emailPasswordLinked: true,
       });
       
       console.log('✅ Default admin created successfully!');

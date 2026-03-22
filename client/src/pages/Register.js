@@ -22,7 +22,7 @@ const Register = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleReady, setGoogleReady] = useState(false);
   const [googleClientId, setGoogleClientId] = useState('');
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, login, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,24 +57,118 @@ const Register = () => {
           callback: async (response) => {
             try {
               setGoogleLoading(true);
-              const res = await axios.post('/api/auth/google', {
-                credential: response.credential,
-                role: formData.role,
+
+              const roleResult = await Swal.fire({
+                title: 'Choose your role',
+                html: '<p style="margin:0 0 12px;color:#64748b;font-size:14px;">Select how you will use the platform. Instructors need admin approval before they can sign in.</p>',
+                input: 'select',
+                inputOptions: {
+                  student: 'Student — access courses and learning right away',
+                  instructor: 'Instructor — account created; wait for admin approval',
+                },
+                inputPlaceholder: 'Select role',
+                showCancelButton: true,
+                confirmButtonText: 'Continue',
+                cancelButtonText: 'Cancel',
+                inputValidator: (value) => {
+                  if (!value) {
+                    return 'Please select Student or Instructor';
+                  }
+                  return null;
+                },
               });
 
-              if (res.data.success) {
+              if (roleResult.isDismissed || !roleResult.value) {
+                return;
+              }
+
+              const selectedRole = roleResult.value;
+
+              const passResult = await Swal.fire({
+                title: 'Create your login password',
+                html: `
+                  <p style="margin:0 0 14px;color:#64748b;font-size:14px;text-align:left">
+                    Use the <strong>same email</strong> (from Google) and this password on the Login page.
+                    You can still use <strong>Continue with Google</strong> anytime.
+                  </p>
+                  <input id="google-reg-pw" type="password" class="swal2-input" placeholder="Password (min 6 characters)" autocomplete="new-password" style="margin-bottom:10px;width:100%;box-sizing:border-box">
+                  <input id="google-reg-pw2" type="password" class="swal2-input" placeholder="Confirm password" autocomplete="new-password" style="width:100%;box-sizing:border-box">
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Create account',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => {
+                  const p1 = document.getElementById('google-reg-pw')?.value || '';
+                  const p2 = document.getElementById('google-reg-pw2')?.value || '';
+                  if (p1.length < 6) {
+                    Swal.showValidationMessage('Password must be at least 6 characters');
+                    return false;
+                  }
+                  if (p1 !== p2) {
+                    Swal.showValidationMessage('Passwords do not match');
+                    return false;
+                  }
+                  return p1;
+                },
+              });
+
+              if (passResult.isDismissed || passResult.value == null) {
+                return;
+              }
+
+              const res = await axios.post('/api/auth/google', {
+                credential: response.credential,
+                role: selectedRole,
+                password: passResult.value,
+              });
+
+              if (res.data.success && res.data.token && res.data.user) {
+                const u = res.data.user;
+                // Never log in unapproved instructors (defense in depth; server should not return this)
+                if (u.role === 'instructor' && u.isApproved === false) {
+                  logout();
+                  await Swal.fire({
+                    icon: 'info',
+                    title: 'Registration received',
+                    text:
+                      'Your instructor account is pending admin approval. You can sign in after an administrator approves your account.',
+                    confirmButtonText: 'OK',
+                  });
+                  navigate('/login', { replace: true });
+                  return;
+                }
+
+                login(res.data.user, res.data.token);
                 Swal.fire({
                   icon: 'success',
-                  title: 'Google Registration Successful!',
-                  text: 'Your account has been created. Please login to continue.',
-                  confirmButtonText: 'Go to Login',
-                }).then(() => navigate('/login'));
+                  title: 'Welcome!',
+                  text: 'You are signed in. You can also log in later with your email and password.',
+                  timer: 2200,
+                  showConfirmButton: false,
+                }).then(() => navigate('/dashboard'));
               }
             } catch (error) {
+              const code = error.response?.data?.code;
+              const message =
+                error.response?.data?.message || 'Unable to register with Google';
+
+              if (code === 'PENDING_INSTRUCTOR_APPROVAL') {
+                logout();
+                await Swal.fire({
+                  icon: 'info',
+                  title: 'Registration received',
+                  text: message,
+                  confirmButtonText: 'OK',
+                });
+                navigate('/login', { replace: true });
+                return;
+              }
+
               Swal.fire({
                 icon: 'error',
                 title: 'Google Signup Failed',
-                text: error.response?.data?.message || 'Unable to register with Google',
+                text: message,
               });
             } finally {
               setGoogleLoading(false);
@@ -91,7 +185,7 @@ const Register = () => {
     }, 200);
 
     return () => clearInterval(initTimer);
-  }, [formData.role, googleClientId, navigate]);
+  }, [googleClientId, login, navigate]);
 
   const handleContinueWithGoogle = () => {
     if (!googleReady || !window.google || !window.google.accounts || !window.google.accounts.id) {

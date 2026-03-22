@@ -63,6 +63,7 @@ router.post(
         emailVerificationToken: hashedToken,
         emailVerificationExpire: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
         isApproved: role === 'student' ? true : false, // Students auto-approved, instructors need admin approval
+        emailPasswordLinked: true,
       });
 
       // Send verification email
@@ -121,9 +122,10 @@ router.post(
       }
 
       const { email, password } = req.body;
+      const emailNorm = String(email).toLowerCase().trim();
 
       // Check if user exists and get password
-      const user = await User.findOne({ email }).select('+password');
+      const user = await User.findOne({ email: emailNorm }).select('+password');
 
       if (!user) {
         return res.status(401).json({
@@ -140,15 +142,17 @@ router.post(
         });
       }
 
-      // Check if instructor is approved
+      // Check if instructor is approved (before password — same message for any password attempt)
       if (user.role === 'instructor' && !user.isApproved) {
         return res.status(403).json({
           success: false,
-          message: 'Your instructor account is pending approval from admin.',
+          code: 'PENDING_INSTRUCTOR_APPROVAL',
+          message:
+            'Your instructor account needs administrator approval before you can log in. Please wait for approval or contact support.',
         });
       }
 
-      // Check password
+      // Check password (works for all approved users, including those who also use Google, once they set a password in Profile)
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
         return res.status(401).json({
@@ -170,6 +174,8 @@ router.post(
           role: user.role,
           profilePhoto: user.profilePhoto,
           isEmailVerified: user.isEmailVerified,
+          isApproved: user.isApproved,
+          emailPasswordLinked: user.emailPasswordLinked,
         },
       });
     } catch (error) {
@@ -186,7 +192,7 @@ router.post(
 // @access  Public
 router.post('/google', async (req, res) => {
   try {
-    const { credential, role } = req.body;
+    const { credential, role, password: clientLoginPassword } = req.body;
 
     if (!credential) {
       return res.status(400).json({
@@ -224,11 +230,17 @@ router.post('/google', async (req, res) => {
     let user = await User.findOne({ email }).select('+password');
     const selectedRole = role === 'instructor' ? 'instructor' : 'student';
 
+    const trimmedPwd =
+      clientLoginPassword != null ? String(clientLoginPassword).trim() : '';
+    const useClientPassword = trimmedPwd.length >= 6;
+
     if (!user) {
       user = await User.create({
         name,
         email,
-        password: `google_${googleSub}_${Date.now()}`,
+        password: useClientPassword ? trimmedPwd : `google_${googleSub}_${Date.now()}`,
+        googleSub,
+        emailPasswordLinked: useClientPassword,
         role: selectedRole,
         profilePhoto: picture,
         isEmailVerified: emailVerified,
@@ -242,6 +254,8 @@ router.post('/google', async (req, res) => {
         });
       }
 
+      // Link Google to this email (e.g. legacy Google account missing googleSub)
+      user.googleSub = googleSub;
       if (!user.profilePhoto && picture) {
         user.profilePhoto = picture;
       }
@@ -254,7 +268,9 @@ router.post('/google', async (req, res) => {
     if (user.role === 'instructor' && !user.isApproved) {
       return res.status(403).json({
         success: false,
-        message: 'Your instructor account is pending approval from admin.',
+        code: 'PENDING_INSTRUCTOR_APPROVAL',
+        message:
+          'Your instructor account has been created. Please wait for an administrator to approve it before you can sign in.',
       });
     }
 
@@ -270,6 +286,8 @@ router.post('/google', async (req, res) => {
         role: user.role,
         profilePhoto: user.profilePhoto,
         isEmailVerified: user.isEmailVerified,
+        isApproved: user.isApproved,
+        emailPasswordLinked: user.emailPasswordLinked,
       },
     });
   } catch (error) {

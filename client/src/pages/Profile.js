@@ -17,6 +17,12 @@ const Profile = () => {
     skills: [],
   });
   const [skillInput, setSkillInput] = useState('');
+  const [loginPassword, setLoginPassword] = useState({
+    current: '',
+    new: '',
+    confirm: '',
+  });
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -106,6 +112,49 @@ const Profile = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoginPasswordSave = async (e) => {
+    e.preventDefault();
+    if (loginPassword.new.length < 6) {
+      Swal.fire({ icon: 'error', title: 'Invalid password', text: 'New password must be at least 6 characters.' });
+      return;
+    }
+    if (loginPassword.new !== loginPassword.confirm) {
+      Swal.fire({ icon: 'error', title: 'Mismatch', text: 'New password and confirmation do not match.' });
+      return;
+    }
+    const googleUser = !!user?.googleSub;
+    const linked = user?.emailPasswordLinked;
+    if ((googleUser && linked) || !googleUser) {
+      if (!loginPassword.current) {
+        Swal.fire({ icon: 'error', title: 'Required', text: 'Please enter your current password.' });
+        return;
+      }
+    }
+    setPasswordSaving(true);
+    try {
+      const payload = { password: loginPassword.new };
+      if (loginPassword.current) payload.currentPassword = loginPassword.current;
+      const res = await axios.put('/api/profile/login-password', payload);
+      if (res.data.success) {
+        updateUser(res.data.user);
+        setLoginPassword({ current: '', new: '', confirm: '' });
+        Swal.fire({
+          icon: 'success',
+          title: 'Password updated',
+          text: res.data.message || 'You can sign in with email and password on the login page.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Could not update password',
+        text: error.response?.data?.message || 'Something went wrong',
+      });
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -252,6 +301,59 @@ const Profile = () => {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="form-group" style={{ marginTop: '28px', paddingTop: '24px', borderTop: '1px solid #e5eaf2' }}>
+              <h3 className="form-label" style={{ fontSize: '18px', marginBottom: '8px' }}>
+                Email login password
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>
+                {user?.googleSub && !user?.emailPasswordLinked
+                  ? 'You signed in with Google. Set a password here to also sign in with your email and password.'
+                  : 'Change the password you use on the login page with email and password.'}
+              </p>
+              {((user?.googleSub && user?.emailPasswordLinked) || !user?.googleSub) && (
+                <div className="form-group">
+                  <label className="form-label">Current password</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={loginPassword.current}
+                    onChange={(e) => setLoginPassword((p) => ({ ...p, current: e.target.value }))}
+                    autoComplete="current-password"
+                  />
+                </div>
+              )}
+              <div className="form-group">
+                <label className="form-label">New password</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={loginPassword.new}
+                  onChange={(e) => setLoginPassword((p) => ({ ...p, new: e.target.value }))}
+                  autoComplete="new-password"
+                  minLength={6}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Confirm new password</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={loginPassword.confirm}
+                  onChange={(e) => setLoginPassword((p) => ({ ...p, confirm: e.target.value }))}
+                  autoComplete="new-password"
+                  minLength={6}
+                />
+              </div>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleLoginPasswordSave}
+                disabled={passwordSaving}
+              >
+                {passwordSaving ? 'Saving...' : 'Save login password'}
+              </button>
             </div>
 
             <div className="form-actions">

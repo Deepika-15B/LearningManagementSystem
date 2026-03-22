@@ -66,6 +66,18 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpire: {
     type: Date,
   },
+  /** Set when user signs up or signs in with Google — they must use Google to log in, not password */
+  googleSub: {
+    type: String,
+    default: null,
+    sparse: true,
+    index: true,
+  },
+  /** True once user has chosen a password for email login (Google users start false) */
+  emailPasswordLinked: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });
@@ -73,10 +85,15 @@ const userSchema = new mongoose.Schema({
 // Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Compare password method
