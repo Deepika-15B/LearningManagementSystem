@@ -35,6 +35,14 @@ const CourseDetail = () => {
   const [studentNotes, setStudentNotes] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesUpdatedAt, setNotesUpdatedAt] = useState(null);
+  const apiBaseUrl = (axios.defaults.baseURL || (process.env.REACT_APP_API_URL || '').trim() || '').replace(/\/+$/, '');
+
+  const getAssetUrl = useCallback((assetPath) => {
+    if (!assetPath) return '#';
+    if (/^https?:\/\//i.test(assetPath)) return assetPath;
+    const normalizedPath = assetPath.startsWith('/') ? assetPath : `/${assetPath}`;
+    return apiBaseUrl ? `${apiBaseUrl}${normalizedPath}` : normalizedPath;
+  }, [apiBaseUrl]);
 
   const canManageCourse = useMemo(() => {
     if (!user || !course) return false;
@@ -589,7 +597,7 @@ const CourseDetail = () => {
                                         {submission.fileName}
                                       </span>
                                       <a
-                                        href={submission.filePath}
+                                        href={submission.fileUrl || getAssetUrl(submission.filePath)}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="btn-secondary"

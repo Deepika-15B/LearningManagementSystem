@@ -177,6 +177,19 @@ router.get('/:id', async (req, res) => {
     }
 
     const course = courseDoc.toObject();
+    const backendBaseUrl = (process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
+    course.assignments = (course.assignments || []).map((assignment) => ({
+      ...assignment,
+      submissions: (assignment.submissions || []).map((submission) => {
+        const normalizedPath = (submission.filePath || '').startsWith('/')
+          ? submission.filePath
+          : `/${submission.filePath || ''}`;
+        return {
+          ...submission,
+          fileUrl: submission.fileUrl || `${backendBaseUrl}${normalizedPath}`,
+        };
+      }),
+    }));
     const isOwnerInstructor = role === 'instructor' && courseDoc.instructor?._id?.toString() === userId;
     const isAdmin = role === 'admin';
     const isStudent = role === 'student';
@@ -575,6 +588,7 @@ router.post('/:id/assignments/:assignmentId/submissions', protect, authorize('st
     const submissionPayload = {
       student: req.user._id,
       filePath: `/uploads/assignments/${req.file.filename}`,
+      fileUrl: `${(process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '')}/uploads/assignments/${req.file.filename}`,
       fileName: req.file.originalname,
       mimeType: req.file.mimetype,
       remarks: req.body.remarks || '',
