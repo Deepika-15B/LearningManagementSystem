@@ -36,9 +36,6 @@ const AdminDashboard = () => {
     blockedUsers: 0,
   });
 
- useEffect(() => {
-  fetchAllData();
-}, [fetchAllData]);
 
   const fetchAllData = async () => {
     try {
@@ -49,6 +46,11 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
+   useEffect(() => {
+  fetchAllData();
+}, [fetchAllData]);
+
 
   const fetchUsers = async (toggleLoading = true) => {
     try {
