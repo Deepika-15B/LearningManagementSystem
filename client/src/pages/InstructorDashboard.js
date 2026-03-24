@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import { FiBook, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
+import { getMediaUrl } from '../utils/mediaUrl';
 import './InstructorDashboard.css';
 
 const InstructorDashboard = () => {
@@ -124,7 +125,7 @@ const InstructorDashboard = () => {
                         <div className="course-cell">
                           {course.thumbnail && (
                             <img
-                              src={course.thumbnail}
+                              src={getMediaUrl(course.thumbnail)}
                               alt={course.title}
                               className="course-thumbnail-small"
                             />

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import { FiUser, FiBook, FiStar, FiCheck, FiUpload, FiClock, FiPlayCircle, FiVideo, FiExternalLink } from 'react-icons/fi';
+import { getMediaUrl } from '../utils/mediaUrl';
 import './CourseDetail.css';
 
 const CourseDetail = () => {
@@ -425,7 +426,7 @@ const CourseDetail = () => {
           <div className="course-main">
             {course.thumbnail ? (
               <img
-                src={course.thumbnail}
+                src={getMediaUrl(course.thumbnail)}
                 alt={course.title}
                 className="course-detail-thumbnail"
               />

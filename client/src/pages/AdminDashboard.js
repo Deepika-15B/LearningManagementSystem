@@ -15,6 +15,7 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi';
 import StatsCard from '../components/StatsCard';
+import { getMediaUrl } from '../utils/mediaUrl';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -328,7 +329,7 @@ const AdminDashboard = () => {
                           <div className="course-cell">
                             {course.thumbnail && (
                               <img
-                                src={course.thumbnail}
+                                src={getMediaUrl(course.thumbnail)}
                                 alt={course.title}
                                 className="course-thumbnail-small"
                               />

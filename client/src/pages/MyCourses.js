@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { FiBook, FiUser, FiArrowRight } from 'react-icons/fi';
+import { getMediaUrl } from '../utils/mediaUrl';
 import './MyCourses.css';
 
 const MyCourses = () => {
@@ -60,7 +61,7 @@ const MyCourses = () => {
                 <div key={enrollment._id} className="enrollment-card">
                   {course.thumbnail ? (
                     <img
-                      src={course.thumbnail}
+                      src={getMediaUrl(course.thumbnail)}
                       alt={course.title}
                       className="course-thumbnail"
                     />
