@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import { FiBook, FiPlus, FiEdit, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
+import { FiBook, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import './InstructorDashboard.css';
 
@@ -11,11 +11,7 @@ const InstructorDashboard = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const res = await axios.get('/api/courses');
       if (res.data.success) {
@@ -33,7 +29,13 @@ const InstructorDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCourses();
+    }
+  }, [user, fetchCourses]);
 
   const handleDelete = async (courseId) => {
     const result = await Swal.fire({
@@ -58,12 +60,6 @@ const InstructorDashboard = () => {
       }
     }
   };
-
-  useEffect(() => {
-    if (user) {
-      fetchCourses();
-    }
-  }, [user]);
 
   const getStatusBadge = (status) => {
     const badges = {

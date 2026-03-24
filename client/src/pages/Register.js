@@ -186,7 +186,7 @@ const Register = () => {
     }, 200);
 
     return () => clearInterval(initTimer);
-  }, [googleClientId, login, navigate]);
+  }, [googleClientId, login, logout, navigate]);
 
   const handleContinueWithGoogle = () => {
     if (!googleReady || !window.google || !window.google.accounts || !window.google.accounts.id) {
