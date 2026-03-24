@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiTrendingUp, FiUsers, FiBook, FiAward } from 'react-icons/fi';
+import { FiTrendingUp} from 'react-icons/fi';
 import './StatsCard.css';
 
 const StatsCard = ({ title, value, icon, gradient, trend, trendValue }) => {

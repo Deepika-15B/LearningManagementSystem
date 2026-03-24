@@ -36,9 +36,9 @@ const AdminDashboard = () => {
     blockedUsers: 0,
   });
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+ useEffect(() => {
+  fetchAllData();
+}, [fetchAllData]);
 
   const fetchAllData = async () => {
     try {
