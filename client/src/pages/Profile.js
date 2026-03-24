@@ -9,6 +9,7 @@ import './Profile.css';
 const Profile = () => {
   const { user, updateUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'admin';
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -86,7 +87,9 @@ const Profile = () => {
     formDataToSend.append('name', formData.name);
     formDataToSend.append('bio', formData.bio);
     formDataToSend.append('phone', formData.phone);
-    formDataToSend.append('skills', JSON.stringify(formData.skills));
+    if (!isAdmin) {
+      formDataToSend.append('skills', JSON.stringify(formData.skills));
+    }
 
     setLoading(true);
     try {
@@ -109,6 +112,63 @@ const Profile = () => {
         icon: 'error',
         title: 'Update Failed',
         text: error.response?.data?.message || 'Failed to update profile',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveProfilePhoto = async () => {
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Remove profile photo?',
+      text: 'Your profile picture will be removed.',
+      showCancelButton: true,
+      confirmButtonText: 'Remove',
+      cancelButtonText: 'Cancel',
+    });
+    if (!confirm.isConfirmed) return;
+
+    setLoading(true);
+    try {
+      let res;
+      try {
+        res = await axios.delete('/api/profile/photo');
+      } catch (deleteError) {
+        // Fallback for older backend instances that don't yet have DELETE /api/profile/photo
+        if (deleteError.response?.status === 404) {
+          const fallbackPayload = new FormData();
+          fallbackPayload.append('name', formData.name);
+          fallbackPayload.append('bio', formData.bio);
+          fallbackPayload.append('phone', formData.phone);
+          if (!isAdmin) {
+            fallbackPayload.append('skills', JSON.stringify(formData.skills));
+          }
+          fallbackPayload.append('removeProfilePhoto', 'true');
+
+          res = await axios.put('/api/profile', fallbackPayload, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        } else {
+          throw deleteError;
+        }
+      }
+
+      if (res.data.success) {
+        updateUser(res.data.user);
+        Swal.fire({
+          icon: 'success',
+          title: 'Removed',
+          text: 'Profile photo removed successfully.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: error.response?.data?.message || 'Could not remove profile photo',
       });
     } finally {
       setLoading(false);
@@ -166,7 +226,9 @@ const Profile = () => {
     formDataToSend.append('name', formData.name);
     formDataToSend.append('bio', formData.bio);
     formDataToSend.append('phone', formData.phone);
-    formDataToSend.append('skills', JSON.stringify(formData.skills));
+    if (!isAdmin) {
+      formDataToSend.append('skills', JSON.stringify(formData.skills));
+    }
 
     try {
       const res = await axios.put('/api/profile', formDataToSend, {
@@ -218,6 +280,16 @@ const Profile = () => {
                 style={{ display: 'none' }}
               />
             </label>
+            {user?.profilePhoto && (
+              <button
+                type="button"
+                className="remove-photo-btn"
+                onClick={handleRemoveProfilePhoto}
+                disabled={loading}
+              >
+                Remove profile photo
+              </button>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="profile-form">
@@ -261,47 +333,49 @@ const Profile = () => {
               </small>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Skills/Interests</label>
-              <div className="skills-input-group">
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddSkill();
-                    }
-                  }}
-                  className="form-input"
-                  placeholder="Add a skill (e.g., Java, DBMS, AI)"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddSkill}
-                  className="btn-secondary"
-                >
-                  Add
-                </button>
-              </div>
-              {formData.skills.length > 0 && (
-                <div className="skills-list">
-                  {formData.skills.map((skill, index) => (
-                    <span key={index} className="skill-tag">
-                      {skill}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSkill(skill)}
-                        className="skill-remove"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+            {!isAdmin && (
+              <div className="form-group">
+                <label className="form-label">Skills/Interests</label>
+                <div className="skills-input-group">
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddSkill();
+                      }
+                    }}
+                    className="form-input"
+                    placeholder="Add a skill (e.g., Java, DBMS, AI)"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="btn-secondary"
+                  >
+                    Add
+                  </button>
                 </div>
-              )}
-            </div>
+                {formData.skills.length > 0 && (
+                  <div className="skills-list">
+                    {formData.skills.map((skill, index) => (
+                      <span key={index} className="skill-tag">
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="skill-remove"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="form-group" style={{ marginTop: '28px', paddingTop: '24px', borderTop: '1px solid #e5eaf2' }}>
               <h3 className="form-label" style={{ fontSize: '18px', marginBottom: '8px' }}>

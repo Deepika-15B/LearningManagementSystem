@@ -1,7 +1,7 @@
 .admin-dashboard {
   flex: 1;
   padding: 40px 0;
-  background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+  background: linear-gradient(135deg, #f8fbff 0%, #eff4fc 100%);
   min-height: calc(100vh - 70px);
 }
 
@@ -15,7 +15,7 @@
 .admin-header h1 {
   font-size: 42px;
   font-weight: 700;
-  color: #000000;
+  color: #1f2a44;
   margin-bottom: 8px;
   letter-spacing: -1px;
 }
@@ -40,7 +40,7 @@
   background: white;
   padding: 8px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(31, 42, 68, 0.1);
 }
 
 .tab-button {
@@ -65,9 +65,9 @@
 }
 
 .tab-button.active {
-  color: #000000;
-  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #1f2a44;
+  background: linear-gradient(135deg, #e9f0ff 0%, #dbeafe 100%);
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.15);
   font-weight: 600;
 }
 
@@ -75,10 +75,50 @@
   background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.12);
+  border: 1px solid #e2e8f0;
   backdrop-filter: blur(10px);
   animation: fadeIn 0.6s ease-out;
+}
+
+.admin-toolbar {
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.admin-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filter-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 2px solid #dbe3ef;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.filter-input input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
 }
 
 .table-container {
@@ -113,9 +153,7 @@
 }
 
 .admin-table tbody tr:hover {
-  background-color: #F9FAFB;
-  transform: scale(1.01);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background-color: #f8fbff;
 }
 
 .course-cell {
@@ -183,25 +221,25 @@
 }
 
 .btn-icon:hover {
-  background-color: #000000;
-  border-color: #000000;
+  background-color: #1e3a8a;
+  border-color: #1e3a8a;
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
 }
 
 .btn-icon-success:hover {
-  background-color: #374151;
-  border-color: #374151;
+  background-color: #047857;
+  border-color: #047857;
   color: white;
-  box-shadow: 0 4px 12px rgba(55, 65, 81, 0.2);
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
 }
 
 .btn-icon-danger:hover {
-  background-color: #1F2937;
-  border-color: #1F2937;
+  background-color: #dc2626;
+  border-color: #dc2626;
   color: white;
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.2);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
 /* Pending Instructors Section */
@@ -352,6 +390,10 @@
   
   .admin-tabs {
     flex-direction: column;
+  }
+
+  .admin-filters {
+    grid-template-columns: 1fr;
   }
   
   .pending-instructors-grid {

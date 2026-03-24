@@ -23,6 +23,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-main);
   color: var(--text-main);
+  line-height: 1.5;
 }
 
 code {
@@ -33,6 +34,32 @@ code {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Better mobile tap feedback */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Modern subtle scrollbar */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #bfccdf;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #eef2f7;
 }
 
 button {

@@ -158,6 +158,11 @@ const liveMeetingSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  durationMinutes: {
+    type: Number,
+    default: 60,
+    min: 1,
+  },
   notes: {
     type: String,
     default: '',

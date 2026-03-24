@@ -65,6 +65,20 @@
   background-color: #1F2937;
 }
 
+.remove-photo-btn {
+  margin-top: 10px;
+  border: 1px solid #ef4444;
+  background: #fff;
+  color: #ef4444;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.remove-photo-btn:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
 .profile-form {
   max-width: 600px;
   margin: 0 auto;

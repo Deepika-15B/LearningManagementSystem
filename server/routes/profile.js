@@ -64,7 +64,7 @@ router.get('/', protect, async (req, res) => {
 // @access  Private
 router.put('/', protect, upload.single('profilePhoto'), async (req, res) => {
   try {
-    const { name, bio, skills, phone } = req.body;
+    const { name, bio, skills, phone, removeProfilePhoto } = req.body;
     const user = await User.findById(req.user._id);
 
     if (name) user.name = name;
@@ -77,6 +77,9 @@ router.put('/', protect, upload.single('profilePhoto'), async (req, res) => {
     if (req.file) {
       user.profilePhoto = `/uploads/profiles/${req.file.filename}`;
     }
+    if (removeProfilePhoto === 'true' || removeProfilePhoto === true) {
+      user.profilePhoto = '';
+    }
 
     await user.save();
 
@@ -87,6 +90,35 @@ router.put('/', protect, upload.single('profilePhoto'), async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// @route   DELETE /api/profile/photo
+// @desc    Remove profile photo
+// @access  Private
+router.delete('/photo', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    user.profilePhoto = '';
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: 'Profile photo removed successfully',
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

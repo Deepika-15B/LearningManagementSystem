@@ -54,6 +54,7 @@ const Login = () => {
               setGoogleLoading(true);
               const res = await axios.post('/api/auth/google', {
                 credential: response.credential,
+                mode: 'login',
               });
               if (res.data.success) {
                 login(res.data.user, res.data.token);
@@ -73,6 +74,14 @@ const Login = () => {
                 Swal.fire({
                   icon: 'info',
                   title: 'Approval pending',
+                  text: message,
+                });
+                return;
+              }
+              if (code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Sign up required',
                   text: message,
                 });
                 return;

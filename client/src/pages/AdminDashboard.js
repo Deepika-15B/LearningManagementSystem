@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import { FiUser, FiBook, FiCheck, FiX, FiStar, FiUserX, FiTrash2, FiUsers, FiTrendingUp } from 'react-icons/fi';
+import {
+  FiUser,
+  FiBook,
+  FiCheck,
+  FiX,
+  FiStar,
+  FiUserX,
+  FiTrash2,
+  FiUsers,
+  FiTrendingUp,
+  FiSearch,
+  FiRefreshCw,
+} from 'react-icons/fi';
 import StatsCard from '../components/StatsCard';
 import './AdminDashboard.css';
 
@@ -10,22 +22,35 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [courseSearch, setCourseSearch] = useState('');
+  const [courseStatusFilter, setCourseStatusFilter] = useState('all');
+  const [userSearch, setUserSearch] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCourses: 0,
     pendingCourses: 0,
     pendingInstructors: 0,
+    featuredCourses: 0,
+    blockedUsers: 0,
   });
 
   useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    } else {
-      fetchCourses();
-    }
-  }, [activeTab]);
+    fetchAllData();
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchAllData = async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([fetchUsers(false), fetchCourses(false)]);
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async (toggleLoading = true) => {
     try {
       const res = await axios.get('/api/admin/users');
       if (res.data.success) {
@@ -38,16 +63,17 @@ const AdminDashboard = () => {
           ...prev,
           totalUsers: res.data.users.length,
           pendingInstructors,
+          blockedUsers: res.data.users.filter((u) => u.isBlocked).length,
         }));
       }
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
-      setLoading(false);
+      if (toggleLoading) setLoading(false);
     }
   };
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (toggleLoading = true) => {
     try {
       const res = await axios.get('/api/admin/courses');
       if (res.data.success) {
@@ -60,12 +86,13 @@ const AdminDashboard = () => {
           ...prev,
           totalCourses: res.data.courses.length,
           pendingCourses,
+          featuredCourses: res.data.courses.filter((c) => c.isFeatured).length,
         }));
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
     } finally {
-      setLoading(false);
+      if (toggleLoading) setLoading(false);
     }
   };
 
@@ -74,7 +101,7 @@ const AdminDashboard = () => {
       const res = await axios.put(`/api/admin/users/${userId}/approve`);
       if (res.data.success) {
         Swal.fire('Approved!', 'User has been approved.', 'success');
-        fetchUsers();
+          fetchUsers(false);
       }
     } catch (error) {
       Swal.fire('Error!', error.response?.data?.message || 'Failed to approve user', 'error');
@@ -86,7 +113,7 @@ const AdminDashboard = () => {
       const res = await axios.put(`/api/admin/users/${userId}/block`);
       if (res.data.success) {
         Swal.fire('Success!', res.data.message, 'success');
-        fetchUsers();
+        fetchUsers(false);
       }
     } catch (error) {
       Swal.fire('Error!', error.response?.data?.message || 'Failed to block user', 'error');
@@ -98,7 +125,7 @@ const AdminDashboard = () => {
       const res = await axios.put(`/api/admin/courses/${courseId}/approve`);
       if (res.data.success) {
         Swal.fire('Approved!', 'Course has been approved.', 'success');
-        fetchCourses();
+        fetchCourses(false);
       }
     } catch (error) {
       Swal.fire('Error!', error.response?.data?.message || 'Failed to approve course', 'error');
@@ -110,7 +137,7 @@ const AdminDashboard = () => {
       const res = await axios.put(`/api/admin/courses/${courseId}/reject`);
       if (res.data.success) {
         Swal.fire('Rejected!', 'Course has been rejected.', 'success');
-        fetchCourses();
+        fetchCourses(false);
       }
     } catch (error) {
       Swal.fire('Error!', error.response?.data?.message || 'Failed to reject course', 'error');
@@ -122,7 +149,7 @@ const AdminDashboard = () => {
       const res = await axios.put(`/api/admin/courses/${courseId}/feature`);
       if (res.data.success) {
         Swal.fire('Success!', res.data.message, 'success');
-        fetchCourses();
+        fetchCourses(false);
       }
     } catch (error) {
       Swal.fire('Error!', error.response?.data?.message || 'Failed to feature course', 'error');
@@ -145,7 +172,7 @@ const AdminDashboard = () => {
         const res = await axios.delete(`/api/admin/courses/${courseId}`);
         if (res.data.success) {
           Swal.fire('Deleted!', 'Course has been deleted.', 'success');
-          fetchCourses();
+          fetchCourses(false);
         }
       } catch (error) {
         Swal.fire('Error!', error.response?.data?.message || 'Failed to delete course', 'error');
@@ -161,6 +188,20 @@ const AdminDashboard = () => {
     };
     return badges[status] || badges.pending;
   };
+
+  const filteredCourses = courses.filter((course) => {
+    const matchesSearch = `${course.title} ${course.category} ${course.instructor?.name || ''}`
+      .toLowerCase()
+      .includes(courseSearch.toLowerCase());
+    const matchesStatus = courseStatusFilter === 'all' || course.status === courseStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch = `${u.name} ${u.email} ${u.phone || ''}`.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   if (loading) {
     return (
@@ -208,6 +249,24 @@ const AdminDashboard = () => {
             icon={FiUser}
             gradient="gradient-card-orange"
           />
+          <StatsCard
+            title="Featured Courses"
+            value={stats.featuredCourses}
+            icon={FiStar}
+            gradient="gradient-card-blue"
+          />
+          <StatsCard
+            title="Blocked Users"
+            value={stats.blockedUsers}
+            icon={FiUserX}
+            gradient="gradient-card-orange"
+          />
+        </div>
+
+        <div className="admin-toolbar">
+          <button type="button" className="btn-secondary refresh-btn" onClick={fetchAllData} disabled={refreshing}>
+            <FiRefreshCw className={refreshing ? 'spin' : ''} /> {refreshing ? 'Refreshing...' : 'Refresh Data'}
+          </button>
         </div>
 
         <div className="admin-tabs">
@@ -215,18 +274,39 @@ const AdminDashboard = () => {
             className={`tab-button ${activeTab === 'courses' ? 'active' : ''}`}
             onClick={() => setActiveTab('courses')}
           >
-            <FiBook /> Courses ({courses.length})
+            <FiBook /> Courses ({filteredCourses.length})
           </button>
           <button
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
-            <FiUser /> Users ({users.length})
+            <FiUser /> Users ({filteredUsers.length})
           </button>
         </div>
 
         {activeTab === 'courses' && (
           <div className="admin-content">
+            <div className="admin-filters">
+              <div className="filter-input">
+                <FiSearch />
+                <input
+                  type="text"
+                  placeholder="Search by course, category, instructor..."
+                  value={courseSearch}
+                  onChange={(e) => setCourseSearch(e.target.value)}
+                />
+              </div>
+              <select
+                className="form-select"
+                value={courseStatusFilter}
+                onChange={(e) => setCourseStatusFilter(e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
             <div className="table-container">
               <table className="admin-table">
                 <thead>
@@ -240,7 +320,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.map((course) => {
+                  {filteredCourses.map((course) => {
                     const statusBadge = getStatusBadge(course.status);
                     return (
                       <tr key={course._id}>
@@ -316,12 +396,33 @@ const AdminDashboard = () => {
 
         {activeTab === 'users' && (
           <div className="admin-content">
+            <div className="admin-filters">
+              <div className="filter-input">
+                <FiSearch />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, phone..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                />
+              </div>
+              <select
+                className="form-select"
+                value={userRoleFilter}
+                onChange={(e) => setUserRoleFilter(e.target.value)}
+              >
+                <option value="all">All Roles</option>
+                <option value="student">Students</option>
+                <option value="instructor">Instructors</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
             {/* Pending Instructors Section */}
-            {users.filter(u => u.role === 'instructor' && !u.isApproved).length > 0 && (
+            {filteredUsers.filter(u => u.role === 'instructor' && !u.isApproved).length > 0 && (
               <div className="pending-instructors-section">
                 <h3 className="section-title">Pending Instructor Approvals</h3>
                 <div className="pending-instructors-grid">
-                  {users
+                  {filteredUsers
                     .filter(u => u.role === 'instructor' && !u.isApproved)
                     .map((user) => (
                       <div key={user._id} className="instructor-card">
@@ -390,7 +491,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <tr key={user._id}>
                       <td><strong>{user.name}</strong></td>
                       <td>

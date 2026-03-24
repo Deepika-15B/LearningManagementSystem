@@ -192,7 +192,7 @@ router.post(
 // @access  Public
 router.post('/google', async (req, res) => {
   try {
-    const { credential, role, password: clientLoginPassword } = req.body;
+    const { credential, role, password: clientLoginPassword, mode } = req.body;
 
     if (!credential) {
       return res.status(400).json({
@@ -233,6 +233,14 @@ router.post('/google', async (req, res) => {
     const trimmedPwd =
       clientLoginPassword != null ? String(clientLoginPassword).trim() : '';
     const useClientPassword = trimmedPwd.length >= 6;
+
+    if (!user && mode === 'login') {
+      return res.status(404).json({
+        success: false,
+        code: 'GOOGLE_ACCOUNT_NOT_FOUND',
+        message: 'No account found with this Google email. Please sign up first.',
+      });
+    }
 
     if (!user) {
       user = await User.create({

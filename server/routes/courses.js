@@ -746,7 +746,7 @@ router.post('/:id/quizzes/:quizId/attempts', protect, authorize('student'), asyn
 // @access  Private (Instructor/Admin)
 router.post('/:id/live-meetings', protect, authorize('instructor', 'admin'), async (req, res) => {
   try {
-    const { title, meetingUrl, scheduledAt, notes } = req.body;
+    const { title, meetingUrl, scheduledAt, durationMinutes, notes } = req.body;
 
     if (!title || !title.trim()) {
       return res.status(400).json({ success: false, message: 'Meeting title is required' });
@@ -784,6 +784,7 @@ router.post('/:id/live-meetings', protect, authorize('instructor', 'admin'), asy
       title: title.trim(),
       meetingUrl: normalizedUrl,
       scheduledAt: scheduledAt || null,
+      durationMinutes: durationMinutes ? parseInt(durationMinutes, 10) : 60,
       notes: notes ? notes.trim() : '',
       createdBy: req.user._id,
     });

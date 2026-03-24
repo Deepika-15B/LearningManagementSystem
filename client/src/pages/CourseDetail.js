@@ -30,6 +30,7 @@ const CourseDetail = () => {
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [meetingTitle, setMeetingTitle] = useState('');
   const [meetingScheduledAt, setMeetingScheduledAt] = useState('');
+  const [meetingDuration, setMeetingDuration] = useState(60);
   const [meetingNotes, setMeetingNotes] = useState('');
   const [studentNotes, setStudentNotes] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
@@ -344,6 +345,7 @@ const CourseDetail = () => {
         title: meetingTitle,
         meetingUrl: generatedMeetingUrl,
         scheduledAt: meetingScheduledAt || null,
+        durationMinutes: meetingDuration,
         notes: meetingNotes,
       });
 
@@ -351,6 +353,7 @@ const CourseDetail = () => {
         Swal.fire('Success', 'Live meeting added successfully', 'success');
         setMeetingTitle('');
         setMeetingScheduledAt('');
+        setMeetingDuration(60);
         setMeetingNotes('');
         fetchCourse();
       }
@@ -370,6 +373,14 @@ const CourseDetail = () => {
     const titleSlug = slugify(meetingTitle || 'live-meeting');
     return `https://meet.jit.si/${courseSlug}-${titleSlug}`;
   }, [course?.title, meetingTitle]);
+
+  const isMeetingEnded = (meeting) => {
+    if (!meeting?.scheduledAt) return false;
+    const startTime = new Date(meeting.scheduledAt).getTime();
+    if (Number.isNaN(startTime)) return false;
+    const durationMs = (meeting.durationMinutes || 60) * 60 * 1000;
+    return Date.now() > (startTime + durationMs);
+  };
 
   if (loading) {
     return (
@@ -683,6 +694,14 @@ const CourseDetail = () => {
                         value={meetingScheduledAt}
                         onChange={(e) => setMeetingScheduledAt(e.target.value)}
                       />
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-input"
+                        placeholder="Meeting duration (minutes)"
+                        value={meetingDuration}
+                        onChange={(e) => setMeetingDuration(e.target.value)}
+                      />
                       <textarea
                         className="form-textarea"
                         placeholder="Meeting notes (optional)"
@@ -701,16 +720,23 @@ const CourseDetail = () => {
                           {meeting.scheduledAt && (
                             <p>Scheduled: {new Date(meeting.scheduledAt).toLocaleString()}</p>
                           )}
+                          <p>Duration: {meeting.durationMinutes || 60} minutes</p>
                           {meeting.notes && <p>{meeting.notes}</p>}
                         </div>
-                        <a
-                          href={meeting.meetingUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-primary live-join-btn"
-                        >
-                          Join Meeting <FiExternalLink />
-                        </a>
+                        {isMeetingEnded(meeting) ? (
+                          <button type="button" className="btn-primary live-join-btn" disabled>
+                            Meeting Ended
+                          </button>
+                        ) : (
+                          <a
+                            href={meeting.meetingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-primary live-join-btn"
+                          >
+                            Join Meeting <FiExternalLink />
+                          </a>
+                        )}
                       </div>
                     ))}
                   </div>

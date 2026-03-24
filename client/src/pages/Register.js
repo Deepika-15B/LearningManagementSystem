@@ -121,6 +121,7 @@ const Register = () => {
                 credential: response.credential,
                 role: selectedRole,
                 password: passResult.value,
+                mode: 'register',
               });
 
               if (res.data.success && res.data.token && res.data.user) {
