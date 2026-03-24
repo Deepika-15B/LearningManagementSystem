@@ -575,9 +575,33 @@ const CourseDetail = () => {
                             </div>
                           )}
                           {canManageCourse && (
-                            <span className="badge badge-info">
-                              {assignment.submissions?.length || 0} submissions
-                            </span>
+                            <div className="instructor-submissions">
+                              <span className="badge badge-info">
+                                {assignment.submissions?.length || 0} submissions
+                              </span>
+                              {(assignment.submissions || []).length > 0 && (
+                                <div className="materials-list" style={{ marginTop: '8px' }}>
+                                  {assignment.submissions.map((submission, index) => (
+                                    <div key={`${assignment._id}-submission-${index}`} className="material-item">
+                                      <span>
+                                        {(submission.student?.name || submission.student?.email || 'Student')}
+                                        {' - '}
+                                        {submission.fileName}
+                                      </span>
+                                      <a
+                                        href={submission.filePath}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="btn-secondary"
+                                        style={{ marginLeft: '8px', padding: '4px 8px', fontSize: '12px' }}
+                                      >
+                                        View File
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       );

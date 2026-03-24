@@ -148,7 +148,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const courseDoc = await Course.findById(req.params.id)
-      .populate('instructor', 'name email profilePhoto bio');
+      .populate('instructor', 'name email profilePhoto bio')
+      .populate('assignments.submissions.student', 'name email');
 
     if (!courseDoc) {
       return res.status(404).json({
@@ -201,7 +202,10 @@ router.get('/:id', async (req, res) => {
       }));
       course.assignments = (course.assignments || []).map((assignment) => ({
         ...assignment,
-        submissions: (assignment.submissions || []).filter((submission) => submission.student?.toString() === userId),
+        submissions: (assignment.submissions || []).filter((submission) => {
+          const submissionStudentId = (submission.student?._id || submission.student || '').toString();
+          return submissionStudentId === userId;
+        }),
       }));
     }
 

@@ -1,17 +1,37 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
+  const host = process.env.EMAIL_HOST;
+  const port = Number(process.env.EMAIL_PORT || 587);
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+
+  const missingConfig = !host || !user || !pass || Number.isNaN(port);
+  if (missingConfig) {
+    console.warn('Email skipped: SMTP environment variables are not fully configured.');
+    return;
+  }
+
+  // Render and similar hosts cannot use localhost SMTP unless you run an SMTP service there.
+  if (process.env.NODE_ENV === 'production' && ['127.0.0.1', 'localhost'].includes(host)) {
+    console.warn('Email skipped: EMAIL_HOST points to localhost in production.');
+    return;
+  }
+
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
+    host,
+    port,
+    secure,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user,
+      pass,
     },
+    connectionTimeout: 10000,
   });
 
   const message = {
-    from: `${process.env.EMAIL_USER}`,
+    from: `${user}`,
     to: options.email,
     subject: options.subject,
     html: options.html,
