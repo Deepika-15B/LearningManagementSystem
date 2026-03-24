@@ -35,14 +35,29 @@ const CourseDetail = () => {
   const [studentNotes, setStudentNotes] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesUpdatedAt, setNotesUpdatedAt] = useState(null);
-  const apiBaseUrl = (axios.defaults.baseURL || (process.env.REACT_APP_API_URL || '').trim() || '').replace(/\/+$/, '');
+  const handleViewSubmissionFile = useCallback(async (submission) => {
+    try {
+      const resourcePath = submission.filePath || submission.fileUrl;
+      if (!resourcePath) {
+        Swal.fire('Error', 'Submission file URL is missing', 'error');
+        return;
+      }
 
-  const getAssetUrl = useCallback((assetPath) => {
-    if (!assetPath) return '#';
-    if (/^https?:\/\//i.test(assetPath)) return assetPath;
-    const normalizedPath = assetPath.startsWith('/') ? assetPath : `/${assetPath}`;
-    return apiBaseUrl ? `${apiBaseUrl}${normalizedPath}` : normalizedPath;
-  }, [apiBaseUrl]);
+      const res = await axios.get(resourcePath, { responseType: 'blob' });
+      const fileBlob = new Blob([res.data], { type: submission.mimeType || res.data.type || 'application/octet-stream' });
+      const objectUrl = window.URL.createObjectURL(fileBlob);
+      window.open(objectUrl, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(objectUrl), 60000);
+    } catch (error) {
+      Swal.fire(
+        'Error',
+        error.response?.status === 404
+          ? 'File not found on server. Ask student to re-upload.'
+          : (error.response?.data?.message || 'Unable to open submission file'),
+        'error'
+      );
+    }
+  }, []);
 
   const canManageCourse = useMemo(() => {
     if (!user || !course) return false;
@@ -596,15 +611,14 @@ const CourseDetail = () => {
                                         {' - '}
                                         {submission.fileName}
                                       </span>
-                                      <a
-                                        href={submission.fileUrl || getAssetUrl(submission.filePath)}
-                                        target="_blank"
-                                        rel="noreferrer"
+                                      <button
+                                        type="button"
+                                        onClick={() => handleViewSubmissionFile(submission)}
                                         className="btn-secondary"
                                         style={{ marginLeft: '8px', padding: '4px 8px', fontSize: '12px' }}
                                       >
                                         View File
-                                      </a>
+                                      </button>
                                     </div>
                                   ))}
                                 </div>
