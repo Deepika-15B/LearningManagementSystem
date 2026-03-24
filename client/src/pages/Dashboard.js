@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { FiUser, FiMail, FiPhone, FiBook, FiAward, FiTrendingUp } from 'react-icons/fi';
@@ -15,11 +15,7 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, [user]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       if (user?.role === 'student') {
         const res = await axios.get('/api/enrollments/my-courses');
@@ -29,13 +25,13 @@ const Dashboard = () => {
       } else if (user?.role === 'instructor') {
         const res = await axios.get('/api/courses');
         if (res.data.success) {
-          const myCourses = res.data.courses.filter(c => 
+          const myCourses = res.data.courses.filter(c =>
             c.instructor?._id === user._id || c.instructor === user._id
           );
           const totalStudents = myCourses.reduce((sum, c) => sum + (c.enrolledStudents || 0), 0);
-          setStats({ 
+          setStats({
             courses: myCourses.length,
-            students: totalStudents 
+            students: totalStudents
           });
         }
       } else if (user?.role === 'admin') {
@@ -56,7 +52,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const getRoleBadge = (role) => {
     const badges = {

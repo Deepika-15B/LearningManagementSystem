@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AuthContext } from '../context/AuthContext';
@@ -44,14 +44,7 @@ const CourseDetail = () => {
     return user.role === 'instructor' && instructorId === currentUserId;
   }, [user, course]);
 
-  useEffect(() => {
-    fetchCourse();
-    if (isAuthenticated && user?.role === 'student') {
-      checkEnrollment();
-    }
-  }, [id, isAuthenticated, user]);
-
-  const fetchCourse = async () => {
+  const fetchCourse = useCallback(async () => {
     try {
       const res = await axios.get(`/api/courses/${id}`);
       if (res.data.success) {
@@ -67,26 +60,32 @@ const CourseDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
 
-  const checkEnrollment = async () => {
+  const checkEnrollment = useCallback(async () => {
     try {
       setCheckingEnrollment(true);
       const res = await axios.get(`/api/enrollments/${id}/check`);
       if (res.data.success) {
         setIsEnrolled(res.data.isEnrolled);
-        if (res.data.enrollment?.notes !== undefined) {
-          setStudentNotes(res.data.enrollment.notes || '');
-          setNotesUpdatedAt(res.data.enrollment.notesUpdatedAt || null);
-        }
       }
     } catch (error) {
-      console.error('Error checking enrollment:', error);
+      console.error(error);
     } finally {
       setCheckingEnrollment(false);
     }
-  };
+  }, [id]);
 
+  useEffect(() => {
+    fetchCourse();
+    if (isAuthenticated && user?.role === 'student') {
+      checkEnrollment();
+    }
+  }, [fetchCourse, checkEnrollment, isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    checkEnrollment();
+  }, [checkEnrollment]);
   const saveStudentNotes = async () => {
     try {
       setNotesSaving(true);
@@ -109,34 +108,6 @@ const CourseDetail = () => {
       setNotesSaving(false);
     }
   };
-
-  useEffect(() => {
-    if (!activeQuiz) return undefined;
-
-    const countdown = setInterval(() => {
-      setQuizTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdown);
-          submitQuizAttempt(false, true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    const handleVisibility = () => {
-      if (document.hidden) {
-        submitQuizAttempt(true);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      clearInterval(countdown);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [activeQuiz]);
 
   const handleEnroll = async () => {
     if (!isAuthenticated) {
@@ -291,7 +262,7 @@ const CourseDetail = () => {
     setQuizTimeLeft((quiz.durationMinutes || 30) * 60);
   };
 
-  const submitQuizAttempt = async (endedByTabSwitch = false, silent = false) => {
+  const submitQuizAttempt = useCallback(async (endedByTabSwitch = false, silent = false) => {
     if (!activeQuiz || quizSubmitting) return;
     try {
       setQuizSubmitting(true);
@@ -330,7 +301,35 @@ const CourseDetail = () => {
     } finally {
       setQuizSubmitting(false);
     }
-  };
+  }, [activeQuiz, quizSubmitting, id, quizAnswers, fetchCourse]);
+
+  useEffect(() => {
+    if (!activeQuiz) return undefined;
+
+    const countdown = setInterval(() => {
+      setQuizTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdown);
+          submitQuizAttempt(false, true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        submitQuizAttempt(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(countdown);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [activeQuiz, submitQuizAttempt]);
 
   const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
@@ -671,77 +670,77 @@ const CourseDetail = () => {
               {((course.liveMeetings && course.liveMeetings.length > 0)
                 || canManageCourse
                 || (isAuthenticated && user?.role === 'student' && isEnrolled)) && (
-                <div className="course-section-block">
-                  <h3>Live Meetings (Jitsi)</h3>
-                  {canManageCourse && (
-                    <form className="inline-form" onSubmit={handleCreateMeeting}>
-                      <input
-                        className="form-input"
-                        placeholder="Meeting title"
-                        value={meetingTitle}
-                        onChange={(e) => setMeetingTitle(e.target.value)}
-                        required
-                      />
-                      <input
-                        className="form-input"
-                        placeholder="Auto-generated Jitsi meeting URL"
-                        value={generatedMeetingUrl}
-                        readOnly
-                      />
-                      <input
-                        type="datetime-local"
-                        className="form-input"
-                        value={meetingScheduledAt}
-                        onChange={(e) => setMeetingScheduledAt(e.target.value)}
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        className="form-input"
-                        placeholder="Meeting duration (minutes)"
-                        value={meetingDuration}
-                        onChange={(e) => setMeetingDuration(e.target.value)}
-                      />
-                      <textarea
-                        className="form-textarea"
-                        placeholder="Meeting notes (optional)"
-                        value={meetingNotes}
-                        onChange={(e) => setMeetingNotes(e.target.value)}
-                      />
-                      <button type="submit" className="btn-primary">Add Live Meeting</button>
-                    </form>
-                  )}
+                  <div className="course-section-block">
+                    <h3>Live Meetings (Jitsi)</h3>
+                    {canManageCourse && (
+                      <form className="inline-form" onSubmit={handleCreateMeeting}>
+                        <input
+                          className="form-input"
+                          placeholder="Meeting title"
+                          value={meetingTitle}
+                          onChange={(e) => setMeetingTitle(e.target.value)}
+                          required
+                        />
+                        <input
+                          className="form-input"
+                          placeholder="Auto-generated Jitsi meeting URL"
+                          value={generatedMeetingUrl}
+                          readOnly
+                        />
+                        <input
+                          type="datetime-local"
+                          className="form-input"
+                          value={meetingScheduledAt}
+                          onChange={(e) => setMeetingScheduledAt(e.target.value)}
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          className="form-input"
+                          placeholder="Meeting duration (minutes)"
+                          value={meetingDuration}
+                          onChange={(e) => setMeetingDuration(e.target.value)}
+                        />
+                        <textarea
+                          className="form-textarea"
+                          placeholder="Meeting notes (optional)"
+                          value={meetingNotes}
+                          onChange={(e) => setMeetingNotes(e.target.value)}
+                        />
+                        <button type="submit" className="btn-primary">Add Live Meeting</button>
+                      </form>
+                    )}
 
-                  <div className="materials-list">
-                    {(course.liveMeetings || []).map((meeting) => (
-                      <div key={meeting._id} className="assignment-item">
-                        <div>
-                          <strong><FiVideo /> {meeting.title}</strong>
-                          {meeting.scheduledAt && (
-                            <p>Scheduled: {new Date(meeting.scheduledAt).toLocaleString()}</p>
+                    <div className="materials-list">
+                      {(course.liveMeetings || []).map((meeting) => (
+                        <div key={meeting._id} className="assignment-item">
+                          <div>
+                            <strong><FiVideo /> {meeting.title}</strong>
+                            {meeting.scheduledAt && (
+                              <p>Scheduled: {new Date(meeting.scheduledAt).toLocaleString()}</p>
+                            )}
+                            <p>Duration: {meeting.durationMinutes || 60} minutes</p>
+                            {meeting.notes && <p>{meeting.notes}</p>}
+                          </div>
+                          {isMeetingEnded(meeting) ? (
+                            <button type="button" className="btn-primary live-join-btn" disabled>
+                              Meeting Ended
+                            </button>
+                          ) : (
+                            <a
+                              href={meeting.meetingUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-primary live-join-btn"
+                            >
+                              Join Meeting <FiExternalLink />
+                            </a>
                           )}
-                          <p>Duration: {meeting.durationMinutes || 60} minutes</p>
-                          {meeting.notes && <p>{meeting.notes}</p>}
                         </div>
-                        {isMeetingEnded(meeting) ? (
-                          <button type="button" className="btn-primary live-join-btn" disabled>
-                            Meeting Ended
-                          </button>
-                        ) : (
-                          <a
-                            href={meeting.meetingUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn-primary live-join-btn"
-                          >
-                            Join Meeting <FiExternalLink />
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
 
@@ -769,18 +768,17 @@ const CourseDetail = () => {
               {isAuthenticated && user?.role === 'student' && (
                 <button
                   onClick={handleEnroll}
-                  className={`btn-primary btn-full ${
-                    isEnrolled ? 'btn-success' : ''
-                  }`}
+                  className={`btn-primary btn-full ${isEnrolled ? 'btn-success' : ''
+                    }`}
                   disabled={isEnrolled || checkingEnrollment}
                 >
                   {checkingEnrollment
                     ? 'Checking...'
                     : isEnrolled
-                    ? 'Enrolled ✓'
-                    : course.isFree
-                    ? 'Enroll for Free'
-                    : `Enroll for $${course.price}`}
+                      ? 'Enrolled ✓'
+                      : course.isFree
+                        ? 'Enroll for Free'
+                        : `Enroll for $${course.price}`}
                 </button>
               )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import {
@@ -36,23 +36,7 @@ const AdminDashboard = () => {
     blockedUsers: 0,
   });
 
-
-  const fetchAllData = async () => {
-    try {
-      setRefreshing(true);
-      await Promise.all([fetchUsers(false), fetchCourses(false)]);
-    } finally {
-      setRefreshing(false);
-      setLoading(false);
-    }
-  };
-
-   useEffect(() => {
-  fetchAllData();
-}, [fetchAllData]);
-
-
-  const fetchUsers = async (toggleLoading = true) => {
+  const fetchUsers = useCallback(async (toggleLoading = true) => {
     try {
       const res = await axios.get('/api/admin/users');
       if (res.data.success) {
@@ -73,9 +57,9 @@ const AdminDashboard = () => {
     } finally {
       if (toggleLoading) setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchCourses = async (toggleLoading = true) => {
+  const fetchCourses = useCallback(async (toggleLoading = true) => {
     try {
       const res = await axios.get('/api/admin/courses');
       if (res.data.success) {
@@ -96,14 +80,28 @@ const AdminDashboard = () => {
     } finally {
       if (toggleLoading) setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchAllData = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([fetchUsers(false), fetchCourses(false)]);
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
+  }, [fetchUsers, fetchCourses]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleApproveUser = async (userId) => {
     try {
       const res = await axios.put(`/api/admin/users/${userId}/approve`);
       if (res.data.success) {
         Swal.fire('Approved!', 'User has been approved.', 'success');
-          fetchUsers(false);
+        fetchUsers(false);
       }
     } catch (error) {
       Swal.fire('Error!', error.response?.data?.message || 'Failed to approve user', 'error');
@@ -378,13 +376,13 @@ const AdminDashboard = () => {
                             >
                               <FiStar />
                             </button>
-                             <button
-                               onClick={() => handleDeleteCourse(course._id)}
-                               className="btn-icon btn-icon-danger"
-                               title="Delete"
-                             >
-                               <FiTrash2 />
-                             </button>
+                            <button
+                              onClick={() => handleDeleteCourse(course._id)}
+                              className="btn-icon btn-icon-danger"
+                              title="Delete"
+                            >
+                              <FiTrash2 />
+                            </button>
                           </div>
                         </td>
                       </tr>
