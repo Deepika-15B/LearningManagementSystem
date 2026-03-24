@@ -90,17 +90,6 @@ const MyCourses = () => {
                         Enrolled: {new Date(enrollment.enrollmentDate).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="progress-bar">
-                      <div className="progress-label">
-                        Progress: {enrollment.progress}%
-                      </div>
-                      <div className="progress-track">
-                        <div
-                          className="progress-fill"
-                          style={{ width: `${enrollment.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
                     <Link
                       to={`/courses/${course._id}`}
                       className="btn-primary btn-full"
