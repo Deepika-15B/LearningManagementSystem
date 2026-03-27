@@ -197,6 +197,4 @@ The admin account is created automatically on server startup if it doesn't alrea
 - **Interactive Elements**: Enhanced user experience
 - **Glass Morphism**: Modern design trend implementation
 
-## 📄 License
 
-ISC
